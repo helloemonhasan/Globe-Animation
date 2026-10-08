@@ -1,0 +1,42 @@
+/* Clean Fullscreen Reset */
+:root {
+  color-scheme: dark;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Custom Font Declaration */
+@font-face {
+  font-family: 'LT Museum';
+  src: local('LT Museum'),
+       url('/fonts/lt-museum.woff2') format('woff2'),
+       url('/fonts/lt-museum.woff') format('woff'),
+       url('/fonts/lt-museum.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #050505;
+  overflow: hidden;
+  font-family: 'LT Museum', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #050505;
+}
