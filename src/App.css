@@ -107,9 +107,48 @@ nav {
 }
 
 /* Mobile optimizations */
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.overlay-footer {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.header-left, .header-right {
+  display: flex;
+  flex-direction: column;
+}
+.header-right {
+  align-items: flex-end;
+}
+
 @media (max-width: 768px) {
   .gallery-container {
     height: 100svh;
+  }
+  
+  .overlay-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-left, .header-right {
+    align-items: center;
+    text-align: center;
+  }
+  
+  .overlay-footer {
+    flex-direction: column;
+    gap: 12px;
   }
 }
 

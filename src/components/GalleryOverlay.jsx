@@ -55,15 +55,13 @@ export function GalleryOverlay({
     >
       {/* Top Header Row */}
       <header
+        className="overlay-header"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
           pointerEvents: isOpen ? 'none' : 'auto'
         }}
       >
         {/* Top Left: Oscar Studio Branding */}
-        <div>
+        <div className="header-left">
           <div
             style={{
               display: 'flex',
@@ -234,7 +232,7 @@ export function GalleryOverlay({
         </div>
 
         {/* Top Right: Selected Work & Utility Controls */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+        <div className="header-right" style={{ gap: '8px' }}>
           <div
             style={{
               display: 'flex',
@@ -271,14 +269,9 @@ export function GalleryOverlay({
 
       {/* Bottom Interface Controls & Navigation */}
       <footer
+        className="overlay-footer"
         style={{
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '8px',
-          pointerEvents: isOpen ? 'none' : 'auto',
-          width: '100%'
+          pointerEvents: isOpen ? 'none' : 'auto'
         }}
       >
         {/* Category Filters Bar */}
