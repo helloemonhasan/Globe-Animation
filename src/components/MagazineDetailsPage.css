@@ -1,0 +1,1024 @@
+/* ==========================================================================
+   MAGAZINE EDITORIAL DETAILS PAGE — ASYMMETRIC CINÉ-REVUE LAYOUT
+   ========================================================================== */
+
+/* Main Fullscreen Scrollable Container */
+.magazine-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: #07080a;
+  color: #f7f6f2;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  animation: magFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes magFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Light Mode Overrides */
+:root[data-theme='light'] .magazine-viewport,
+.light-mode .magazine-viewport {
+  background-color: #f7f6f2;
+  color: #121316;
+}
+
+/* Custom Editorial Scrollbar */
+.magazine-viewport::-webkit-scrollbar {
+  width: 7px;
+}
+.magazine-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+:root[data-theme='light'] .magazine-viewport::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+}
+.magazine-viewport::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+}
+:root[data-theme='light'] .magazine-viewport::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.22);
+}
+.magazine-viewport::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Ambient Ambient Gradient / Film Lighting */
+.magazine-ambient-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 90vh;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 65% 15%, rgba(212, 175, 55, 0.09) 0%, rgba(18, 20, 28, 0.4) 45%, transparent 75%);
+  transition: background 0.5s ease;
+}
+
+:root[data-theme='light'] .magazine-ambient-glow {
+  background: radial-gradient(circle at 65% 15%, rgba(212, 175, 55, 0.12) 0%, rgba(230, 226, 218, 0.6) 45%, transparent 75%);
+}
+
+/* Subtle Film Grain Noise Texture */
+.magazine-noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.035;
+  background-image: radial-gradient(#fff 1px, transparent 1px);
+  background-size: 4px 4px;
+}
+
+:root[data-theme='light'] .magazine-noise-overlay {
+  opacity: 0.025;
+  background-image: radial-gradient(#000 1px, transparent 1px);
+}
+
+/* --------------------------------------------------------------------------
+   STICKY MASTHEAD & EDITORIAL NAV BAR
+   -------------------------------------------------------------------------- */
+.magazine-masthead {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px clamp(20px, 4.5vw, 64px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: rgba(7, 8, 10, 0.82);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+:root[data-theme='light'] .magazine-masthead {
+  background: rgba(247, 246, 242, 0.88);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.masthead-branding {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.masthead-badge {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #d4af37;
+  padding: 3px 8px;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 2px;
+}
+
+.masthead-title {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.masthead-divider {
+  width: 1px;
+  height: 14px;
+  background-color: rgba(255, 255, 255, 0.15);
+}
+:root[data-theme='light'] .masthead-divider {
+  background-color: rgba(0, 0, 0, 0.15);
+}
+
+.masthead-sub {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.6;
+  letter-spacing: 0.04em;
+}
+
+.masthead-center-counter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+:root[data-theme='light'] .masthead-center-counter {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.masthead-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mag-nav-arrow-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+:root[data-theme='light'] .mag-nav-arrow-btn {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+}
+.mag-nav-arrow-btn:hover {
+  border-color: #d4af37;
+  color: #d4af37;
+  transform: translateY(-1px);
+}
+
+.mag-return-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 20px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #07080a;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.18);
+}
+:root[data-theme='light'] .mag-return-btn {
+  background: #111114;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.18);
+}
+.mag-return-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.35);
+}
+
+/* --------------------------------------------------------------------------
+   ARTICLE CONTENT & ASYMMETRIC GRID
+   -------------------------------------------------------------------------- */
+.magazine-article {
+  position: relative;
+  z-index: 2;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 56px) clamp(20px, 4.5vw, 64px) 100px;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 1: HERO ASYMMETRIC SPREAD
+   -------------------------------------------------------------------------- */
+.magazine-hero-spread {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(32px, 5vw, 72px);
+  align-items: start;
+  margin-bottom: clamp(60px, 8vw, 110px);
+}
+
+.hero-editorial-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero-issue-folio {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.folio-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: #d4af37;
+  text-transform: uppercase;
+}
+
+.folio-line {
+  height: 1px;
+  flex: 1;
+  max-width: 120px;
+  background: linear-gradient(to right, #d4af37, transparent);
+}
+
+.hero-award-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 16px;
+}
+:root[data-theme='light'] .hero-award-stamp {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.hero-magazine-headline {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(38px, 5vw, 68px);
+  font-weight: 700;
+  line-height: 1.04;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px 0;
+  color: #ffffff;
+  text-transform: uppercase;
+}
+:root[data-theme='light'] .hero-magazine-headline {
+  color: #0c0d10;
+}
+
+.hero-magazine-subheading {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(20px, 2.2vw, 27px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.38;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 32px 0;
+  max-width: 620px;
+}
+:root[data-theme='light'] .hero-magazine-subheading {
+  color: rgba(0, 0, 0, 0.78);
+}
+
+/* Editorial Specs Matrix */
+.hero-specs-matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 16px;
+  padding: 22px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 30px;
+}
+:root[data-theme='light'] .hero-specs-matrix {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.spec-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.spec-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.5;
+}
+
+.spec-value {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #d4af37;
+}
+
+/* Hero Poster Asymmetric Offset Column */
+.hero-poster-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 12px;
+}
+
+.poster-frame-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  aspect-ratio: 2 / 3;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 35px rgba(212, 175, 55, 0.12);
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+:root[data-theme='light'] .poster-frame-wrapper {
+  box-shadow: 
+    0 24px 60px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(0, 0, 0, 0.12),
+    0 0 35px rgba(212, 175, 55, 0.1);
+}
+
+.poster-frame-wrapper:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 
+    0 32px 75px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(212, 175, 55, 0.4),
+    0 0 45px rgba(212, 175, 55, 0.25);
+}
+
+.poster-frame-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.poster-corner-ribbon {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(7, 8, 10, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Palette Swatches Bar */
+.poster-palette-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 9px 18px;
+  border-radius: 999px;
+}
+:root[data-theme='light'] .poster-palette-bar {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.palette-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+
+.palette-swatches {
+  display: flex;
+  gap: 7px;
+}
+
+.palette-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.palette-dot:hover {
+  transform: scale(1.25);
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 2: CRITICAL ESSAY & ASYMMETRIC PULL QUOTE
+   -------------------------------------------------------------------------- */
+.magazine-essay-section {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: clamp(32px, 5vw, 64px);
+  margin-bottom: clamp(60px, 8vw, 110px);
+  align-items: start;
+}
+
+.essay-body-col {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(19px, 1.8vw, 22px);
+  line-height: 1.68;
+  color: rgba(255, 255, 255, 0.88);
+}
+:root[data-theme='light'] .essay-body-col {
+  color: rgba(18, 19, 22, 0.9);
+}
+
+.essay-body-col p {
+  margin-bottom: 22px;
+}
+
+.magazine-drop-cap {
+  float: left;
+  font-family: 'Cinzel', serif;
+  font-size: 68px;
+  line-height: 54px;
+  padding-top: 6px;
+  padding-right: 14px;
+  padding-bottom: 2px;
+  color: #d4af37;
+  font-weight: 700;
+}
+
+/* Curator Side Card (Asymmetric) */
+.curator-side-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #d4af37;
+  padding: 28px;
+  border-radius: 4px;
+}
+:root[data-theme='light'] .curator-side-card {
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-left: 3px solid #d4af37;
+}
+
+.curator-badge-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #d4af37;
+  margin-bottom: 14px;
+}
+
+.curator-notes-text {
+  font-size: 14px;
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 20px;
+}
+:root[data-theme='light'] .curator-notes-text {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+/* Full Width Pull Quote */
+.magazine-pull-quote-banner {
+  margin: clamp(40px, 6vw, 80px) 0 clamp(60px, 8vw, 110px);
+  padding: clamp(32px, 5vw, 60px) clamp(24px, 4vw, 54px);
+  border-top: 1px solid rgba(212, 175, 55, 0.4);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.4);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.04) 0%, transparent 60%);
+  position: relative;
+  text-align: center;
+}
+
+.pull-quote-mark {
+  font-family: 'Cinzel', serif;
+  font-size: 80px;
+  line-height: 40px;
+  color: #d4af37;
+  opacity: 0.35;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.pull-quote-content {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(24px, 3.2vw, 38px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.35;
+  color: #ffffff;
+  max-width: 900px;
+  margin: 0 auto 18px;
+}
+:root[data-theme='light'] .pull-quote-content {
+  color: #0d0e12;
+}
+
+.pull-quote-byline {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #d4af37;
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 3: THE DIRECTOR — IN-DEPTH BIOGRAPHY & AUTEUR STUDY
+   -------------------------------------------------------------------------- */
+.magazine-section-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 36px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+:root[data-theme='light'] .magazine-section-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.section-number-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #d4af37;
+}
+
+.section-header-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(22px, 2.5vw, 30px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.director-asymmetric-spread {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: clamp(32px, 5vw, 60px);
+  align-items: start;
+  margin-bottom: clamp(60px, 8vw, 110px);
+}
+
+.director-profile-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+:root[data-theme='light'] .director-profile-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.director-monogram-badge {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37 0%, #876d1e 100%);
+  color: #07080a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+  margin-bottom: 22px;
+}
+
+.director-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0 0 6px 0;
+  color: #ffffff;
+}
+:root[data-theme='light'] .director-card-name {
+  color: #0c0d10;
+}
+
+.director-card-title {
+  font-size: 13px;
+  color: #d4af37;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+}
+
+.director-card-born {
+  font-size: 12px;
+  opacity: 0.6;
+  margin-bottom: 24px;
+}
+
+.director-style-label {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d4af37;
+  margin-bottom: 12px;
+}
+
+.director-style-list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.director-style-list li {
+  font-size: 13px;
+  line-height: 1.5;
+  opacity: 0.8;
+  position: relative;
+  padding-left: 18px;
+}
+
+.director-style-list li::before {
+  content: '♦';
+  position: absolute;
+  left: 0;
+  color: #d4af37;
+  font-size: 10px;
+}
+
+.director-bio-text-col {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.director-bio-lead {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(20px, 2vw, 24px);
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.95);
+  font-weight: 500;
+}
+:root[data-theme='light'] .director-bio-lead {
+  color: rgba(10, 11, 14, 0.95);
+}
+
+.director-philosophy-quote-box {
+  background: rgba(212, 175, 55, 0.05);
+  border-left: 3px solid #d4af37;
+  padding: 24px 28px;
+  border-radius: 0 6px 6px 0;
+  margin-top: 10px;
+}
+
+.director-philosophy-quote {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 21px;
+  font-style: italic;
+  line-height: 1.45;
+  color: #ffffff;
+  margin: 0 0 10px 0;
+}
+:root[data-theme='light'] .director-philosophy-quote {
+  color: #0c0d10;
+}
+
+.director-quote-author {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #d4af37;
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 4: FILM CREW DIRECTORY & MASTERCLASS
+   -------------------------------------------------------------------------- */
+.crew-editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 22px;
+  margin-bottom: 50px;
+}
+
+.crew-dept-card {
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  padding: 24px;
+  border-radius: 4px;
+  transition: all 0.25s ease;
+  position: relative;
+}
+:root[data-theme='light'] .crew-dept-card {
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+.crew-dept-card:hover {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-2px);
+}
+:root[data-theme='light'] .crew-dept-card:hover {
+  background: rgba(0, 0, 0, 0.035);
+}
+
+.crew-dept-tag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #d4af37;
+  margin-bottom: 8px;
+}
+
+.crew-person-name {
+  font-family: 'Cinzel', serif;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  margin: 0 0 8px 0;
+}
+:root[data-theme='light'] .crew-person-name {
+  color: #0c0d10;
+}
+
+.crew-role-notes {
+  font-size: 13px;
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+:root[data-theme='light'] .crew-role-notes {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* Ensemble Cast Showcase */
+.cast-showcase-container {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 32px clamp(20px, 3.5vw, 40px);
+  margin-bottom: clamp(60px, 8vw, 110px);
+}
+:root[data-theme='light'] .cast-showcase-container {
+  background: rgba(0, 0, 0, 0.015);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.cast-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.cast-section-title {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d4af37;
+  margin: 0;
+}
+
+.cast-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.cast-actor-card {
+  padding: 16px 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+:root[data-theme='light'] .cast-actor-card {
+  background: rgba(0, 0, 0, 0.025);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.actor-name {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+}
+:root[data-theme='light'] .actor-name {
+  color: #0c0d10;
+}
+
+.actor-character {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.65);
+}
+:root[data-theme='light'] .actor-character {
+  color: rgba(0, 0, 0, 0.65);
+}
+
+/* --------------------------------------------------------------------------
+   SECTION 5: NEXT FEATURE TEASER & ARCHIVE FOOTER
+   -------------------------------------------------------------------------- */
+.magazine-footer-banner {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 50px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+:root[data-theme='light'] .magazine-footer-banner {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.next-feature-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px clamp(24px, 4vw, 48px);
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+:root[data-theme='light'] .next-feature-card {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(0, 0, 0, 0.02) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.next-feature-card:hover {
+  transform: translateY(-3px);
+  border-color: #d4af37;
+  box-shadow: 0 12px 36px rgba(212, 175, 55, 0.18);
+}
+
+.next-meta-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #d4af37;
+  margin-bottom: 6px;
+}
+
+.next-film-title {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(20px, 2.5vw, 32px);
+  font-weight: 700;
+  margin: 0;
+  color: #ffffff;
+}
+:root[data-theme='light'] .next-film-title {
+  color: #0c0d10;
+}
+
+.next-arrow-circle {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #d4af37;
+  color: #07080a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+.next-feature-card:hover .next-arrow-circle {
+  transform: translateX(6px);
+}
+
+.magazine-colophon {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  opacity: 0.55;
+  letter-spacing: 0.05em;
+  padding-bottom: 40px;
+}
+
+/* --------------------------------------------------------------------------
+   RESPONSIVE ADAPTATIONS
+   -------------------------------------------------------------------------- */
+@media (max-width: 960px) {
+  .magazine-hero-spread {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+  .hero-poster-col {
+    order: -1;
+    align-items: flex-start;
+  }
+  .poster-frame-wrapper {
+    max-width: 300px;
+  }
+  .magazine-essay-section {
+    grid-template-columns: 1fr;
+  }
+  .director-asymmetric-spread {
+    grid-template-columns: 1fr;
+  }
+  .masthead-center-counter {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .magazine-masthead {
+    padding: 12px 18px;
+  }
+  .masthead-sub {
+    display: none;
+  }
+  .hero-magazine-headline {
+    font-size: 32px;
+  }
+  .hero-magazine-subheading {
+    font-size: 18px;
+  }
+  .hero-specs-matrix {
+    grid-template-columns: 1fr 1fr;
+  }
+  .magazine-colophon {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}

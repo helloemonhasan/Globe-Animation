@@ -7,7 +7,7 @@ import { movies } from './data/movies';
 import { SphereGallery } from './components/SphereGallery';
 import { CameraRig } from './components/CameraRig';
 import { GalleryOverlay } from './components/GalleryOverlay';
-import { ProjectModal } from './components/ProjectModal';
+import { MagazineDetailsPage } from './components/MagazineDetailsPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { gothicSpaceMusic } from './components/GothicSpaceAudio';
 import { sounds } from './components/AudioEffects';
@@ -121,42 +121,7 @@ export default function App() {
   }, [activeMovies.length]);
 
   const selectedMovie = selectedIndex !== null ? activeMovies[selectedIndex] : null;
-
-  // Handle mouse wheel / trackpad scroll when popup is open to change movies one after another
-  const wheelAccumulatorRef = useRef(0);
-  const lastWheelStepTimeRef = useRef(0);
-
-  useEffect(() => {
-    if (selectedIndex === null) {
-      wheelAccumulatorRef.current = 0;
-      return;
-    }
-
-    const handleWheelPopup = (e) => {
-      // Prevent browser native scrolling
-      e.preventDefault();
-
-      const now = performance.now();
-      wheelAccumulatorRef.current += e.deltaY;
-
-      // Sensitive threshold for trackpads and mouse wheels
-      const threshold = 35;
-      const cooldownMs = 220; // Snappy stepping one after another
-
-      if (Math.abs(wheelAccumulatorRef.current) >= threshold && now - lastWheelStepTimeRef.current > cooldownMs) {
-        lastWheelStepTimeRef.current = now;
-        if (wheelAccumulatorRef.current > 0) {
-          handleNextMovie();
-        } else {
-          handlePrevMovie();
-        }
-        wheelAccumulatorRef.current = 0;
-      }
-    };
-
-    window.addEventListener('wheel', handleWheelPopup, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheelPopup);
-  }, [selectedIndex, handleNextMovie, handlePrevMovie]);
+  const nextMovie = selectedIndex !== null ? activeMovies[(selectedIndex + 1) % activeMovies.length] : null;
 
   const [layoutMode, setLayoutMode] = useState('globe'); // 'globe' | 'line'
   const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
@@ -255,17 +220,18 @@ export default function App() {
         isDragging={isDragging}
       />
 
-      {/* Detailed Movie Inspection Modal */}
+      {/* Editorial Magazine Details Page (Asymmetric Layout with Director Bio & Film Crew) */}
       {selectedMovie && (
-        <ProjectModal
+        <MagazineDetailsPage
           movie={selectedMovie}
-          project={selectedMovie}
-          theme={theme}
           selectedIndex={selectedIndex}
           totalCount={activeMovies.length}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
           onClose={() => setSelectedIndex(null)}
           onNext={handleNextMovie}
           onPrev={handlePrevMovie}
+          nextMovie={nextMovie}
         />
       )}
 

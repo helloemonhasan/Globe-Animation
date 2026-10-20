@@ -409,64 +409,6 @@ export function SphereGallery({
     groupRef.current.scale.set(currentSphereScale, currentSphereScale, currentSphereScale);
   });
 
-  // Timeline Ruler component for Line mode
-  const TimelineRuler = useCallback(({ layoutProgressRef, lineScrollRef, totalCards }) => {
-    const meshRef = useRef();
-    const count = totalCards * 4; // 4 lines per card
-    const spacing = 2.05 / 4; 
-    
-    const dummy = useMemo(() => new THREE.Object3D(), []);
-
-    useFrame(() => {
-      if (!meshRef.current) return;
-      const progress = layoutProgressRef.current?.value || 0;
-      
-      if (progress < 0.01) {
-        meshRef.current.visible = false;
-        return;
-      }
-      meshRef.current.visible = true;
-      
-      const scroll = lineScrollRef.current;
-      const totalWidth = totalCards * 2.05;
-      
-      for (let i = 0; i < count; i++) {
-        let rawX = i * spacing - scroll;
-        
-        // Wrap logic (same as cards)
-        while (rawX > totalWidth / 2) rawX -= totalWidth;
-        while (rawX < -totalWidth / 2) rawX += totalWidth;
-        
-        const angle = rawX / 16.0;
-        
-        // Dynamic height scaling: Center is tall, edges are short
-        const dist = Math.abs(rawX);
-        const scaleY = Math.max(0.1, Math.exp(-dist * dist * 0.04)) * 0.8;
-        
-        const currentScaleY = scaleY * progress;
-        
-        // Position below cards (-2.5) and further back on the radius
-        dummy.position.set(Math.sin(angle) * 16.0, -2.5, Math.cos(angle) * 16.0 - 16.0);
-        dummy.rotation.y = angle;
-        
-        // Mark every 4th line as taller and slightly wider
-        const isMajor = i % 4 === 0;
-        dummy.scale.set(isMajor ? 0.02 : 0.012, currentScaleY * (isMajor ? 1.5 : 1.0), 1);
-        
-        dummy.updateMatrix();
-        meshRef.current.setMatrixAt(i, dummy.matrix);
-      }
-      meshRef.current.instanceMatrix.needsUpdate = true;
-    });
-
-    return (
-      <instancedMesh ref={meshRef} args={[null, null, count]} renderOrder={80}>
-        <planeGeometry args={[1, 1]} />
-        <meshBasicMaterial color="#f59e0b" transparent opacity={0.65} depthWrite={false} />
-      </instancedMesh>
-    );
-  }, []);
-
   return (
     <group ref={groupRef}>
       {activeList.map((movie, idx) => {
@@ -504,3 +446,62 @@ export function SphereGallery({
     </group>
   );
 }
+
+// Standalone Timeline Ruler component for Line mode
+function TimelineRuler({ layoutProgressRef, lineScrollRef, totalCards }) {
+  const meshRef = useRef();
+  const count = totalCards * 4; // 4 lines per card
+  const spacing = 2.05 / 4; 
+  
+  const dummy = useMemo(() => new THREE.Object3D(), []);
+
+  useFrame(() => {
+    if (!meshRef.current) return;
+    const progress = layoutProgressRef.current?.value || 0;
+    
+    if (progress < 0.01) {
+      meshRef.current.visible = false;
+      return;
+    }
+    meshRef.current.visible = true;
+    
+    const scroll = lineScrollRef.current;
+    const totalWidth = totalCards * 2.05;
+    
+    for (let i = 0; i < count; i++) {
+      let rawX = i * spacing - scroll;
+      
+      // Wrap logic (same as cards)
+      while (rawX > totalWidth / 2) rawX -= totalWidth;
+      while (rawX < -totalWidth / 2) rawX += totalWidth;
+      
+      const angle = rawX / 16.0;
+      
+      // Dynamic height scaling: Center is tall, edges are short
+      const dist = Math.abs(rawX);
+      const scaleY = Math.max(0.1, Math.exp(-dist * dist * 0.04)) * 0.8;
+      
+      const currentScaleY = scaleY * progress;
+      
+      // Position below cards (-2.5) and further back on the radius
+      dummy.position.set(Math.sin(angle) * 16.0, -2.5, Math.cos(angle) * 16.0 - 16.0);
+      dummy.rotation.y = angle;
+      
+      // Mark every 4th line as taller and slightly wider
+      const isMajor = i % 4 === 0;
+      dummy.scale.set(isMajor ? 0.02 : 0.012, currentScaleY * (isMajor ? 1.5 : 1.0), 1);
+      
+      dummy.updateMatrix();
+      meshRef.current.setMatrixAt(i, dummy.matrix);
+    }
+    meshRef.current.instanceMatrix.needsUpdate = true;
+  });
+
+  return (
+    <instancedMesh ref={meshRef} args={[null, null, count]} renderOrder={80}>
+      <planeGeometry args={[1, 1]} />
+      <meshBasicMaterial color="#f59e0b" transparent opacity={0.65} depthWrite={false} />
+    </instancedMesh>
+  );
+}
+
