@@ -23,7 +23,7 @@ function getTexture(url) {
 }
 
 // Background Card Component on the Sphere
-function BackgroundGlobeCard({ movie, position, quaternion, progressRef }) {
+function BackgroundGlobeCard({ movie, position, quaternion, opacityRef }) {
   const meshRef = useRef();
   const [tex, setTex] = useState(null);
 
@@ -31,8 +31,8 @@ function BackgroundGlobeCard({ movie, position, quaternion, progressRef }) {
     if (!movie?.poster) return;
     let isCancelled = false;
     const loadedTex = getTexture(movie.poster);
-    if (loadedTex) {
-      if (!isCancelled) setTex(loadedTex);
+    if (loadedTex && !isCancelled) {
+      setTex(loadedTex);
     }
     return () => {
       isCancelled = true;
@@ -41,24 +41,14 @@ function BackgroundGlobeCard({ movie, position, quaternion, progressRef }) {
 
   useFrame(() => {
     if (!meshRef.current) return;
-    const p = progressRef.current?.value || 0;
-
-    // Phase 1 (0.0 -> 0.45): Full opacity on the globe
-    // Phase 2 (0.45 -> 0.75): Fade out & scatter outward
-    // Phase 3 (0.75 -> 1.0): Completely hidden
-    if (p < 0.42) {
-      meshRef.current.visible = true;
-      if (meshRef.current.material) {
-        meshRef.current.material.opacity = 0.95;
-      }
-    } else if (p < 0.75) {
-      meshRef.current.visible = true;
-      const t = (p - 0.42) / 0.33;
-      if (meshRef.current.material) {
-        meshRef.current.material.opacity = Math.max(0, (1 - t) * 0.95);
-      }
-    } else {
+    const currentOpacity = opacityRef.current;
+    if (currentOpacity <= 0.005) {
       meshRef.current.visible = false;
+    } else {
+      meshRef.current.visible = true;
+      if (meshRef.current.material) {
+        meshRef.current.material.opacity = currentOpacity;
+      }
     }
   });
 
@@ -67,8 +57,9 @@ function BackgroundGlobeCard({ movie, position, quaternion, progressRef }) {
       <planeGeometry args={[1.22, 1.83]} />
       <meshBasicMaterial
         map={tex}
-        color={tex ? '#ffffff' : '#232733'}
+        color={tex ? '#ffffff' : '#1e222d'}
         transparent
+        depthWrite={false}
         opacity={0.95}
         side={THREE.DoubleSide}
       />
@@ -76,140 +67,135 @@ function BackgroundGlobeCard({ movie, position, quaternion, progressRef }) {
   );
 }
 
-// Focal Birdman Card: Transitions from Sphere Card -> Surges Forward -> Morphs to 16:9 Full Bleed
-function FocalBirdmanCard({ targetItem, progressRef, birdmanTexture }) {
-  const { viewport } = useThree();
-  const meshRef = useRef();
+// Root Scene handling camera, rotating globe, and the focal Birdman card
+function OneShotScene({
+  progressRef,
+  birdmanTexture,
+  sphereItems,
+  birdmanIndex,
+  targetItem
+}) {
+  const { camera, size } = useThree();
+  const globeGroupRef = useRef();
+  const birdmanMeshRef = useRef();
+  const bgOpacityRef = useRef(0.95);
 
-  const basePos = useMemo(() => new THREE.Vector3(...targetItem.position), [targetItem]);
-  const baseQuat = useMemo(() => new THREE.Quaternion(...targetItem.radialQuaternion), [targetItem]);
+  const sphereRadius = 6.8;
+
+  // Scratch objects to avoid per-frame garbage collection
+  const sphereCardWorldPos = useMemo(() => new THREE.Vector3(), []);
+  const baseCardQuat = useMemo(() => new THREE.Quaternion(...targetItem.radialQuaternion), [targetItem]);
   const flatQuat = useMemo(() => new THREE.Quaternion(0, 0, 0, 1), []);
 
+  // Compute exact quaternion that rotates targetItem to directly face the camera at (0, 0, radius)
+  const { qInitial, qTarget, frontFacingQuat } = useMemo(() => {
+    const vNormal = new THREE.Vector3(...targetItem.normal).normalize();
+    const targetDir = new THREE.Vector3(0, 0, 1);
+    const qT = new THREE.Quaternion().setFromUnitVectors(vNormal, targetDir);
+    const qInit = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.22, -0.55, 0));
+    const frontQuat = baseCardQuat.clone().premultiply(qT);
+    return { qInitial: qInit, qTarget: qT, frontFacingQuat: frontQuat };
+  }, [targetItem, baseCardQuat]);
+
   useFrame(() => {
-    if (!meshRef.current) return;
-    const p = progressRef.current?.value || 0;
+    const p = Math.max(0, Math.min(1.0, progressRef.current?.value || 0));
 
-    // Viewport-based 16:9 target size in world units at z = 0
-    // To ensure full-bleed coverage regardless of screen aspect ratio:
-    const targetWidth = Math.max(viewport.width, viewport.height * (16 / 9)) * 1.02;
-    const targetHeight = targetWidth * (9 / 16);
+    if (!globeGroupRef.current || !birdmanMeshRef.current) return;
 
-    if (p < 0.45) {
-      // Anchored to the sphere in initial 2:3 poster frame
-      meshRef.current.position.copy(basePos);
-      meshRef.current.quaternion.copy(baseQuat);
-      meshRef.current.scale.set(1.25, 1.88, 1);
+    // Camera is steady at (0, 0, 12.0)
+    camera.position.set(0, 0, 12.0);
+    camera.lookAt(0, 0, 0);
 
-      // Cropped to center portrait on 2:3 card
-      if (birdmanTexture) {
-        birdmanTexture.repeat.set(0.60, 1.0);
-        birdmanTexture.offset.set(0.20, 0.0);
-      }
-    } else if (p < 0.75) {
-      // Detaches from sphere and glides towards center
-      const t = (p - 0.45) / 0.30;
-      const ease = t * t * (3 - 2 * t); // smoothstep
+    // Compute exact 16:9 target size in world units at z = 0 (exact object-fit: cover math)
+    const vFovRad = (camera.fov * Math.PI) / 180;
+    const distToCenter = camera.position.z;
+    const visibleHeight = 2 * Math.tan(vFovRad / 2) * distToCenter;
+    const screenAspect = size.width / Math.max(size.height, 1);
+    const visibleWidth = visibleHeight * screenAspect;
+    const imgAspect = 16 / 9;
 
-      meshRef.current.position.lerpVectors(basePos, new THREE.Vector3(0, 0, 0), ease);
-      meshRef.current.quaternion.slerpQuaternions(baseQuat, flatQuat, ease);
-
-      const curW = THREE.MathUtils.lerp(1.25, targetWidth * 0.45, ease);
-      const curH = THREE.MathUtils.lerp(1.88, targetHeight * 0.45, ease);
-      meshRef.current.scale.set(curW, curH, 1);
-
-      // Gradually expand horizontal texture reveal
-      if (birdmanTexture) {
-        const repX = THREE.MathUtils.lerp(0.60, 0.85, ease);
-        const offX = THREE.MathUtils.lerp(0.20, 0.075, ease);
-        birdmanTexture.repeat.set(repX, 1.0);
-        birdmanTexture.offset.set(offX, 0.0);
-      }
+    let targetHeroW, targetHeroH;
+    if (screenAspect > imgAspect) {
+      targetHeroW = visibleWidth * 1.015;
+      targetHeroH = targetHeroW / imgAspect;
     } else {
-      // Final surge: Expands into full 16:9 Hero
-      const t = (p - 0.75) / 0.25;
-      const ease = Math.min(1.0, t * (2 - t)); // easeOut
-
-      meshRef.current.position.set(0, 0, 0);
-      meshRef.current.quaternion.set(0, 0, 0, 1);
-
-      const curW = THREE.MathUtils.lerp(targetWidth * 0.45, targetWidth, ease);
-      const curH = THREE.MathUtils.lerp(targetHeight * 0.45, targetHeight, ease);
-      meshRef.current.scale.set(curW, curH, 1);
-
-      // Fully reveal widescreen 16:9 artwork
-      if (birdmanTexture) {
-        const repX = THREE.MathUtils.lerp(0.85, 1.0, ease);
-        const offX = THREE.MathUtils.lerp(0.075, 0.0, ease);
-        birdmanTexture.repeat.set(repX, 1.0);
-        birdmanTexture.offset.set(offX, 0.0);
-      }
+      targetHeroH = visibleHeight * 1.015;
+      targetHeroW = targetHeroH * imgAspect;
     }
-  });
 
-  return (
-    <mesh ref={meshRef} position={targetItem.position} quaternion={targetItem.radialQuaternion}>
-      <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial
-        map={birdmanTexture}
-        color="#ffffff"
-        transparent
-        side={THREE.DoubleSide}
-      />
-    </mesh>
-  );
-}
-
-// Main 3D Continuous One-Shot Scene
-function OneShotCanvasScene({ progressRef, birdmanTexture, targetRotX, targetRotY, targetItem, sphereItems, count, birdmanIndex }) {
-  const { camera } = useThree();
-  const globeGroupRef = useRef();
-
-  useFrame((state, delta) => {
-    if (!globeGroupRef.current) return;
-    const p = progressRef.current?.value || 0;
-
+    // =========================================================================
+    // PHASE 1: (0.00 -> 0.45) Small Globe expands and rotates to face Birdman
+    // =========================================================================
     if (p < 0.45) {
-      // Phase 1: Small globe grows and aligns Birdman to front
       const t = p / 0.45;
-      const ease = t * t * (3 - 2 * t);
+      const ease = t * t * (3 - 2 * t); // Smoothstep curve
 
-      const curScale = THREE.MathUtils.lerp(0.20, 1.0, ease);
-      globeGroupRef.current.scale.set(curScale, curScale, curScale);
+      // Scale globe from small 0.32 to standard 1.0
+      const curGlobeScale = THREE.MathUtils.lerp(0.32, 1.0, ease);
+      globeGroupRef.current.scale.set(curGlobeScale, curGlobeScale, curGlobeScale);
 
-      // Rotate group so Birdman faces camera
-      globeGroupRef.current.rotation.y = THREE.MathUtils.lerp(0.0, targetRotY, ease);
-      globeGroupRef.current.rotation.x = THREE.MathUtils.lerp(0.25, targetRotX, ease);
+      // Smooth quaternion rotation to align Birdman right in front of camera
+      globeGroupRef.current.quaternion.slerpQuaternions(qInitial, qTarget, ease);
+      globeGroupRef.current.visible = true;
+      bgOpacityRef.current = 0.95;
 
-      camera.position.z = THREE.MathUtils.lerp(15.2, 14.0, ease);
-    } else if (p < 0.75) {
-      // Phase 2: Camera pushes forward, globe expands past camera
-      const t = (p - 0.45) / 0.30;
-      const ease = t * t * (3 - 2 * t);
+      // Birdman card rides on the globe surface
+      sphereCardWorldPos
+        .set(...targetItem.position)
+        .applyQuaternion(globeGroupRef.current.quaternion)
+        .multiplyScalar(curGlobeScale);
 
-      globeGroupRef.current.rotation.y = targetRotY;
-      globeGroupRef.current.rotation.x = targetRotX;
+      birdmanMeshRef.current.position.copy(sphereCardWorldPos);
+      birdmanMeshRef.current.quaternion
+        .copy(baseCardQuat)
+        .premultiply(globeGroupRef.current.quaternion);
 
-      const curScale = THREE.MathUtils.lerp(1.0, 2.8, ease);
-      globeGroupRef.current.scale.set(curScale, curScale, curScale);
+      // 2:3 card dimensions on the globe
+      const cardW = 1.25 * curGlobeScale;
+      const cardH = 1.88 * curGlobeScale;
+      birdmanMeshRef.current.scale.set(cardW, cardH, 1);
+    }
+    // =========================================================================
+    // PHASE 2 & 3: (0.45 -> 1.00) Continuous Take: Background fades, Birdman blooms
+    // =========================================================================
+    else {
+      const t = (p - 0.45) / 0.55;
+      const easeSurge = t * t * (3 - 2 * t); // Smoothstep curve
 
-      camera.position.z = THREE.MathUtils.lerp(14.0, 7.8, ease);
-    } else {
-      // Phase 3: Camera settles at final hero vantage
-      const t = (p - 0.75) / 0.25;
-      const ease = Math.min(1.0, t * (2 - t));
+      // Background cards fade out cleanly between 0.45 and 0.65
+      const tFade = Math.min(1.0, (p - 0.45) / 0.20);
+      const fadeEase = tFade * tFade * (3 - 2 * tFade);
+      bgOpacityRef.current = Math.max(0, 0.95 * (1.0 - fadeEase));
 
-      camera.position.z = THREE.MathUtils.lerp(7.8, 4.8, ease);
+      // As soon as background cards fade out, hide globe completely to prevent any occlusion
+      if (bgOpacityRef.current <= 0.01) {
+        globeGroupRef.current.visible = false;
+      } else {
+        globeGroupRef.current.visible = true;
+      }
+
+      // Birdman smoothly detaches and glides from z = sphereRadius to z = 0.0
+      const curZ = THREE.MathUtils.lerp(sphereRadius, 0.0, easeSurge);
+      birdmanMeshRef.current.position.set(0, 0, curZ);
+
+      // Birdman quaternion smoothly straightens to face camera flat
+      birdmanMeshRef.current.quaternion.slerpQuaternions(frontFacingQuat, flatQuat, easeSurge);
+
+      // Scale smoothly morphs from 2:3 card dimensions to full-bleed 16:9 hero
+      const curW = THREE.MathUtils.lerp(1.25, targetHeroW, easeSurge);
+      const curH = THREE.MathUtils.lerp(1.88, targetHeroH, easeSurge);
+      birdmanMeshRef.current.scale.set(curW, curH, 1);
     }
   });
 
   return (
     <>
-      <ambientLight intensity={1.4} />
+      <ambientLight intensity={1.5} />
 
-      {/* Sphere Group containing all cards */}
+      {/* Rotating Globe containing background movie posters */}
       <group ref={globeGroupRef}>
         {sphereItems.map((item, idx) => {
-          if (idx === birdmanIndex) return null;
+          if (idx === birdmanIndex) return null; // Birdman rendered as focal mesh below
           const movie = movies[idx % movies.length];
           return (
             <BackgroundGlobeCard
@@ -217,29 +203,32 @@ function OneShotCanvasScene({ progressRef, birdmanTexture, targetRotX, targetRot
               movie={movie}
               position={item.position}
               quaternion={item.radialQuaternion}
-              progressRef={progressRef}
+              opacityRef={bgOpacityRef}
             />
           );
         })}
-
-        {/* The Birdman Card */}
-        <FocalBirdmanCard
-          targetItem={targetItem}
-          progressRef={progressRef}
-          birdmanTexture={birdmanTexture}
-        />
       </group>
+
+      {/* Focal Birdman Card: Sits in world space, renderOrder 999 so it is never occluded */}
+      <mesh ref={birdmanMeshRef} renderOrder={999}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial
+          map={birdmanTexture}
+          color="#ffffff"
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
     </>
   );
 }
 
 export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro }) {
   const progressRef = useRef({ value: 0.0 });
-  const [introStage, setIntroStage] = useState('INITIALIZING SPHERE');
+  const [introStage, setIntroStage] = useState('EXPLORING ARCHIVE');
   const [isCompleted, setIsCompleted] = useState(false);
   const tweenRef = useRef(null);
 
-  // Target item for Birdman (index 9 in dataset)
   const count = 48;
   const radius = 6.8;
   const birdmanIndex = 9;
@@ -247,22 +236,19 @@ export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro
   const sphereItems = useMemo(() => generateSpherePositions(count, radius), [count, radius]);
   const targetItem = sphereItems[birdmanIndex] || sphereItems[0];
 
-  const targetRotX = Math.PI / 2 - targetItem.phi;
-  const targetRotY = targetItem.theta - Math.PI / 2;
-
   // Load the attached Birdman 16:9 artwork
   const birdmanTexture = useMemo(() => {
     return getTexture('/birdman-hero.png');
   }, []);
 
-  // Preload poster textures for background cards so sphere is never blank
+  // Preload real movie posters for background cards
   useEffect(() => {
-    movies.slice(0, 36).forEach((m) => {
+    movies.slice(0, 48).forEach((m) => {
       if (m?.poster) getTexture(m.poster);
     });
   }, []);
 
-  // GSAP One-Shot Continuous Sequence
+  // Unhurried, smooth, majestic GSAP continuous take (~7.0s total duration)
   useEffect(() => {
     progressRef.current.value = 0.0;
     setIsCompleted(false);
@@ -273,7 +259,20 @@ export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro
 
     if (tweenRef.current) tweenRef.current.kill();
 
-    const tl = gsap.timeline({
+    const tween = gsap.to(progressRef.current, {
+      value: 1.0,
+      duration: 7.0,
+      ease: 'power2.inOut',
+      onUpdate: () => {
+        const val = progressRef.current.value;
+        if (val < 0.45) {
+          setIntroStage('1. EXPANDING CELESTIAL ARCHIVE');
+        } else if (val < 0.75) {
+          setIntroStage('2. TRACKING BEST PICTURE: BIRDMAN');
+        } else {
+          setIntroStage('3. FULL-BLEED 16:9 HERO PRESENTATION');
+        }
+      },
       onComplete: () => {
         setIsCompleted(true);
         try {
@@ -283,36 +282,15 @@ export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro
       }
     });
 
-    tl.to(progressRef.current, {
-      value: 0.45,
-      duration: 1.3,
-      ease: 'power2.inOut',
-      onStart: () => setIntroStage('EXPANDING CELESTIAL GLOBE')
-    })
-      .to(progressRef.current, {
-        value: 0.75,
-        duration: 1.1,
-        ease: 'power3.inOut',
-        onStart: () => setIntroStage('ALIGNING BEST PICTURE: BIRDMAN (2014)')
-      })
-      .to(progressRef.current, {
-        value: 1.0,
-        duration: 1.2,
-        ease: 'power4.out',
-        onStart: () => setIntroStage('SETTLING 16:9 FULL BLEED HERO')
-      });
-
-    tweenRef.current = tl;
+    tweenRef.current = tween;
 
     return () => {
-      tl.kill();
+      tween.kill();
     };
   }, [isReplaying, onAnimationComplete]);
 
   const handleSkip = () => {
-    if (tweenRef.current) {
-      tweenRef.current.kill();
-    }
+    if (tweenRef.current) tweenRef.current.kill();
     progressRef.current.value = 1.0;
     setIsCompleted(true);
     onSkipIntro?.();
@@ -329,23 +307,20 @@ export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro
       }}
     >
       <Canvas
-        camera={{ position: [0, 0, 15.2], fov: 40 }}
+        camera={{ position: [0, 0, 12.0], fov: 40, near: 0.1, far: 1000 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
       >
         <color attach="background" args={['#07080a']} />
-        <OneShotCanvasScene
+        <OneShotScene
           progressRef={progressRef}
           birdmanTexture={birdmanTexture}
-          targetRotX={targetRotX}
-          targetRotY={targetRotY}
-          targetItem={targetItem}
           sphereItems={sphereItems}
-          count={count}
           birdmanIndex={birdmanIndex}
+          targetItem={targetItem}
         />
       </Canvas>
 
-      {/* Unbroken One-Shot Stage Indicator & Skip Button (active during flight) */}
+      {/* Flight Stage Pill & Skip button during the continuous take */}
       {!isCompleted && (
         <div
           style={{
@@ -361,6 +336,7 @@ export function StoryHeroOneShot({ isReplaying, onAnimationComplete, onSkipIntro
             pointerEvents: 'auto',
             background: 'rgba(7, 8, 10, 0.75)',
             backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             padding: '10px 24px',
             borderRadius: '999px',
             border: '1px solid rgba(212, 175, 55, 0.3)'

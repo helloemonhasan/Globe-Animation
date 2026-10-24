@@ -8,8 +8,6 @@ import {
   Award, 
   Sparkles, 
   Camera, 
-  Music, 
-  Clapperboard, 
   Users 
 } from 'lucide-react';
 import { BIRDMAN_STORY_DATA } from '../data/birdmanStoryData';
@@ -121,7 +119,7 @@ export function StoryPage({
         </div>
       </nav>
 
-      {/* 2. Hero Section: Unbroken One-Shot 3D Scene */}
+      {/* 2. Hero Section: Clean, Unbroken 16:9 One-Shot Scene (No titles obstructing artwork) */}
       <section className="story-hero-section">
         {/* The Live Continuous 3D Scene: Globe with Real Posters -> Birdman Surges -> 16:9 Full Bleed */}
         <StoryHeroOneShot
@@ -130,52 +128,70 @@ export function StoryPage({
           onSkipIntro={() => setIsHeroReady(true)}
         />
 
-        {/* Cinematic Vignette Overlay */}
+        {/* Subtle Edge Vignette */}
         <div className="story-hero-gradient-overlay" />
 
-        {/* Hero Content (Smoothly fades in over the 16:9 Birdman artwork once settled) */}
-        <div 
-          className="story-hero-content"
-          style={{
-            opacity: isHeroReady ? 1 : 0,
-            transform: isHeroReady ? 'translateY(0)' : 'translateY(28px)',
-            transition: 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
-            pointerEvents: isHeroReady ? 'auto' : 'none'
-          }}
-        >
-          <div className="story-folio-badge">
-            <Award size={14} style={{ color: '#d4af37' }} />
-            <span>{story.academyEdition} • {story.academyWins}</span>
+        {/* Minimalist Floating Scroll Hint (Only visible once hero settles, zero title obstruction) */}
+        {isHeroReady && (
+          <div 
+            className="story-hero-scroll-pill"
+            onClick={handleScrollToContent}
+            role="button"
+            tabIndex={0}
+            aria-label="Scroll to editorial story"
+          >
+            <span className="scroll-pill-text">Scroll to Explore Story</span>
+            <ArrowDown size={14} className="scroll-pill-arrow" />
+          </div>
+        )}
+      </section>
+
+      {/* 3. Section 2: Editorial Story Narrative, Presentation Header & Chapters */}
+      <main className="story-narrative-wrapper" ref={narrativeRef}>
+        {/* Section 2 Presentation Header (Moved here so Hero is pristine & unobstructed) */}
+        <header className="story-editorial-presentation-header">
+          <div className="story-editorial-badge">
+            <Award size={15} className="award-gold-icon" />
+            <span>{story.academyEdition} // {story.academyWins}</span>
           </div>
 
-          <h1 className="story-hero-title">
+          <h1 className="story-editorial-title">
             {story.title}
           </h1>
 
-          <div className="story-hero-subtitle">
+          <div className="story-editorial-subtitle">
             {story.fullTitle.replace('Birdman or ', '')}
           </div>
 
-          <p className="story-hero-tagline">
+          <p className="story-editorial-synopsis">
             {story.logline}
           </p>
 
-          <div className="story-hero-cta-row">
-            <button className="story-btn-primary" onClick={handleScrollToContent}>
-              <span>Explore The Story</span>
-              <ArrowDown size={16} />
-            </button>
-
-            <button className="story-btn-secondary" onClick={handleReplayIntro}>
-              <RotateCcw size={14} />
-              <span>Replay One-Shot Scene</span>
-            </button>
+          {/* Production Specs Pill Grid */}
+          <div className="story-editorial-specs-grid">
+            <div className="spec-card">
+              <span className="spec-card-label">DIRECTOR</span>
+              <span className="spec-card-value">{story.director.name}</span>
+            </div>
+            <div className="spec-card">
+              <span className="spec-card-label">CINEMATOGRAPHY</span>
+              <span className="spec-card-value">Emmanuel Lubezki, ASC</span>
+            </div>
+            <div className="spec-card">
+              <span className="spec-card-label">RELEASE</span>
+              <span className="spec-card-value">{story.year}</span>
+            </div>
+            <div className="spec-card">
+              <span className="spec-card-label">RUNTIME</span>
+              <span className="spec-card-value">{story.runtime}</span>
+            </div>
+            <div className="spec-card">
+              <span className="spec-card-label">LEAD CAST</span>
+              <span className="spec-card-value">Michael Keaton • Edward Norton • Emma Stone</span>
+            </div>
           </div>
-        </div>
-      </section>
+        </header>
 
-      {/* 3. Editorial Story Narrative & Chapters */}
-      <main className="story-narrative-wrapper" ref={narrativeRef}>
         {/* Full-Width Pull Quote */}
         <div style={{ textAlign: 'center', margin: '0 auto 80px', maxWidth: '840px' }}>
           <div style={{ fontSize: '72px', fontFamily: "'Cinzel', serif", color: '#d4af37', lineHeight: '40px', opacity: 0.35 }}>
