@@ -70,7 +70,7 @@ export const OSCAR_MOVIES = [
     "year": 2014,
     "director": "Alejandro G. Iñárritu",
     "award": "Best Picture",
-    "poster": "https://image.tmdb.org/t/p/w780/rHUg2AuIuLSIYMYFgavVwqt1jtc.jpg"
+    "poster": "/birdman-hero.png"
   },
   {
     "title": "12 Years a Slave",

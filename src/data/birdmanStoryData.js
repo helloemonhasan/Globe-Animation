@@ -11,8 +11,8 @@ export const BIRDMAN_STORY_DATA = {
   nominations: "9 Nominations",
   runtime: "119 min",
   aspectRatio: "1.85:1 (Theatrical) / 16:9 Cinematic Canvas",
-  heroBackdrop: "https://image.tmdb.org/t/p/w1280/s0OrExdg7i3RLR7oqzHRk4q2kL4.jpg",
-  heroPoster: "https://image.tmdb.org/t/p/w780/rHUg2AuIuLSIYMYFgavVwqt1jtc.jpg",
+  heroBackdrop: "/birdman-hero.png",
+  heroPoster: "/birdman-hero.png",
   stills: [
     {
       url: "https://image.tmdb.org/t/p/w1280/s0OrExdg7i3RLR7oqzHRk4q2kL4.jpg",

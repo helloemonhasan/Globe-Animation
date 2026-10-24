@@ -10,11 +10,10 @@ import {
   Camera, 
   Music, 
   Clapperboard, 
-  Users, 
-  Layers 
+  Users 
 } from 'lucide-react';
 import { BIRDMAN_STORY_DATA } from '../data/birdmanStoryData';
-import { StoryGlobeIntro } from './StoryGlobeIntro';
+import { StoryHeroOneShot } from './StoryHeroOneShot';
 import { sounds } from './AudioEffects';
 import './StoryPage.css';
 
@@ -24,7 +23,8 @@ export function StoryPage({
   onNavigateToArchive,
   activeTab = 'story'
 }) {
-  const [showIntroAnim, setShowIntroAnim] = useState(true);
+  const [replayCounter, setReplayCounter] = useState(0);
+  const [isHeroReady, setIsHeroReady] = useState(false);
   const narrativeRef = useRef(null);
 
   const handleScrollToContent = () => {
@@ -40,7 +40,8 @@ export function StoryPage({
     try {
       sounds?.playClick?.();
     } catch {}
-    setShowIntroAnim(true);
+    setIsHeroReady(false);
+    setReplayCounter((c) => c + 1);
   };
 
   const isLight = theme === 'light';
@@ -48,15 +49,7 @@ export function StoryPage({
 
   return (
     <div className={`story-page-container ${isLight ? 'light-mode' : ''}`}>
-      {/* 1. 3D Globe-to-16:9 Morph Intro Overlay */}
-      {showIntroAnim && (
-        <StoryGlobeIntro
-          onComplete={() => setShowIntroAnim(false)}
-          onSkip={() => setShowIntroAnim(false)}
-        />
-      )}
-
-      {/* 2. Sticky Story Top Navbar */}
+      {/* 1. Sticky Story Top Navbar */}
       <nav className="story-top-navbar" aria-label="Story Navigation">
         <div className="story-nav-brand">
           <span className="story-brand-badge">Monolith</span>
@@ -89,8 +82,8 @@ export function StoryPage({
           <button
             className="story-btn-icon"
             onClick={handleReplayIntro}
-            title="Replay Globe to 16:9 Intro Animation"
-            aria-label="Replay Intro"
+            title="Replay One-Shot Scene (Small Globe to 16:9 Hero)"
+            aria-label="Replay One-Shot Scene"
           >
             <RotateCcw size={15} />
           </button>
@@ -128,18 +121,28 @@ export function StoryPage({
         </div>
       </nav>
 
-      {/* 3. Hero Section: 16:9 Cinematic Full-Bleed */}
+      {/* 2. Hero Section: Unbroken One-Shot 3D Scene */}
       <section className="story-hero-section">
-        {/* Full-bleed 16:9 Widescreen Image */}
-        <img
-          src={story.heroBackdrop}
-          alt="Birdman 16:9 Cinematic Hero"
-          className="story-hero-backdrop-img"
+        {/* The Live Continuous 3D Scene: Globe with Real Posters -> Birdman Surges -> 16:9 Full Bleed */}
+        <StoryHeroOneShot
+          isReplaying={replayCounter}
+          onAnimationComplete={() => setIsHeroReady(true)}
+          onSkipIntro={() => setIsHeroReady(true)}
         />
+
+        {/* Cinematic Vignette Overlay */}
         <div className="story-hero-gradient-overlay" />
 
-        {/* Hero Content */}
-        <div className="story-hero-content">
+        {/* Hero Content (Smoothly fades in over the 16:9 Birdman artwork once settled) */}
+        <div 
+          className="story-hero-content"
+          style={{
+            opacity: isHeroReady ? 1 : 0,
+            transform: isHeroReady ? 'translateY(0)' : 'translateY(28px)',
+            transition: 'opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1)',
+            pointerEvents: isHeroReady ? 'auto' : 'none'
+          }}
+        >
           <div className="story-folio-badge">
             <Award size={14} style={{ color: '#d4af37' }} />
             <span>{story.academyEdition} • {story.academyWins}</span>
@@ -165,13 +168,13 @@ export function StoryPage({
 
             <button className="story-btn-secondary" onClick={handleReplayIntro}>
               <RotateCcw size={14} />
-              <span>Replay 3D Intro</span>
+              <span>Replay One-Shot Scene</span>
             </button>
           </div>
         </div>
       </section>
 
-      {/* 4. Editorial Story Narrative & Chapters */}
+      {/* 3. Editorial Story Narrative & Chapters */}
       <main className="story-narrative-wrapper" ref={narrativeRef}>
         {/* Full-Width Pull Quote */}
         <div style={{ textAlign: 'center', margin: '0 auto 80px', maxWidth: '840px' }}>
@@ -339,7 +342,7 @@ export function StoryPage({
           </button>
 
           <div style={{ fontSize: '12px', opacity: 0.5, letterSpacing: '0.06em', textAlign: 'center' }}>
-            MONOLITH ARCHIVE // BIRDMAN (2014) CINEMATIC PRESENTATION
+            MONOLITH ARCHIVE // BIRDMAN (2014) ONE-SHOT CINEMATIC STORY
           </div>
         </footer>
       </main>
