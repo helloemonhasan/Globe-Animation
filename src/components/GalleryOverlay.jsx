@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Play, Pause, Radio, Sun, Moon } from 'lucide-react';
+import { Volume2, VolumeX, Play, Pause, Radio, Sun, Moon, Sparkles } from 'lucide-react';
 import { CATEGORIES } from '../data/movies';
 import { sounds } from './AudioEffects';
 import { gothicSpaceMusic } from './GothicSpaceAudio';
@@ -8,6 +8,8 @@ export function GalleryOverlay({
   isOpen = false,
   layoutMode = 'globe',
   theme = 'dark',
+  activeTab = 'archive',
+  onSelectTab,
   onToggleTheme,
   onSelectLayoutMode,
   activeCategory,
@@ -232,7 +234,63 @@ export function GalleryOverlay({
         </div>
 
         {/* Top Right: Selected Work & Utility Controls */}
-        <div className="header-right" style={{ gap: '8px' }}>
+        <div className="header-right" style={{ display: 'flex', alignItems: 'center', gap: '14px', pointerEvents: 'auto' }}>
+          {/* Top Page Tabs: [ 3D ARCHIVE | STORY ] */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              backgroundColor: isLight ? '#f2f2f7' : '#1c1c1e',
+              border: isLight ? '1px solid rgba(0, 0, 0, 0.08)' : '1px solid #2c2c2e',
+              padding: '3px',
+              borderRadius: '999px',
+              gap: '2px',
+              boxShadow: '0 4px 14px rgba(0, 0, 0, 0.2)',
+              pointerEvents: 'auto'
+            }}
+          >
+            <button
+              onClick={() => onSelectTab?.('archive')}
+              style={{
+                background: activeTab === 'archive' ? (isLight ? '#ffffff' : '#3a3a3c') : 'transparent',
+                color: activeTab === 'archive' ? (isLight ? '#111113' : '#ffffff') : (isLight ? '#8e8e93' : '#98989d'),
+                border: 'none',
+                borderRadius: '999px',
+                padding: '5px 14px',
+                fontFamily: "Inter, 'San Francisco', sans-serif",
+                fontSize: '12px',
+                fontWeight: activeTab === 'archive' ? 600 : 500,
+                cursor: 'pointer',
+                boxShadow: activeTab === 'archive' ? (isLight ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 4px rgba(0,0,0,0.3)') : 'none',
+                transition: 'all 0.25s ease'
+              }}
+            >
+              Archive
+            </button>
+            <button
+              onClick={() => onSelectTab?.('story')}
+              style={{
+                background: activeTab === 'story' ? (isLight ? '#ffffff' : '#3a3a3c') : 'transparent',
+                color: activeTab === 'story' ? (isLight ? '#111113' : '#d4af37') : '#d4af37',
+                border: 'none',
+                borderRadius: '999px',
+                padding: '5px 14px',
+                fontFamily: "Inter, 'San Francisco', sans-serif",
+                fontSize: '12px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                boxShadow: activeTab === 'story' ? (isLight ? '0 1px 4px rgba(0,0,0,0.1)' : '0 1px 4px rgba(0,0,0,0.3)') : 'none',
+                transition: 'all 0.25s ease'
+              }}
+            >
+              <Sparkles size={11} style={{ color: '#d4af37' }} />
+              <span>Story</span>
+            </button>
+          </div>
+
           <div
             style={{
               display: 'flex',
@@ -262,8 +320,6 @@ export function GalleryOverlay({
               {cardCount} Films
             </span>
           </div>
-
-
         </div>
       </header>
 

@@ -8,6 +8,7 @@ import { SphereGallery } from './components/SphereGallery';
 import { CameraRig } from './components/CameraRig';
 import { GalleryOverlay } from './components/GalleryOverlay';
 import { MagazineDetailsPage } from './components/MagazineDetailsPage';
+import { StoryPage } from './components/StoryPage';
 import { LoadingScreen } from './components/LoadingScreen';
 import { gothicSpaceMusic } from './components/GothicSpaceAudio';
 import { sounds } from './components/AudioEffects';
@@ -123,6 +124,34 @@ export default function App() {
   const selectedMovie = selectedIndex !== null ? activeMovies[selectedIndex] : null;
   const nextMovie = selectedIndex !== null ? activeMovies[(selectedIndex + 1) % activeMovies.length] : null;
 
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.location.hash.toLowerCase() === '#story' ? 'story' : 'archive';
+    }
+    return 'archive';
+  });
+
+  useEffect(() => {
+    const handleHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash === '#story') {
+        setActiveTab('story');
+      } else if (hash === '#archive') {
+        setActiveTab('archive');
+      }
+    };
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+
+  const handleSelectTab = useCallback((tab) => {
+    try {
+      sounds?.playClick?.();
+    } catch {}
+    window.location.hash = tab === 'story' ? '#story' : '#archive';
+    setActiveTab(tab);
+  }, []);
+
   const [layoutMode, setLayoutMode] = useState('globe'); // 'globe' | 'line'
   const [theme, setTheme] = useState('dark'); // 'dark' | 'light'
 
@@ -205,9 +234,11 @@ export default function App() {
 
       {/* Editorial Oscar UI & Categories */}
       <GalleryOverlay
-        isOpen={selectedIndex !== null}
+        isOpen={selectedIndex !== null || activeTab === 'story'}
         layoutMode={layoutMode}
         theme={theme}
+        activeTab={activeTab}
+        onSelectTab={handleSelectTab}
         onToggleTheme={handleToggleTheme}
         onSelectLayoutMode={handleSelectLayoutMode}
         activeCategory={activeCategory}
@@ -221,7 +252,7 @@ export default function App() {
       />
 
       {/* Editorial Magazine Details Page (Asymmetric Layout with Director Bio & Film Crew) */}
-      {selectedMovie && (
+      {selectedMovie && activeTab !== 'story' && (
         <MagazineDetailsPage
           movie={selectedMovie}
           selectedIndex={selectedIndex}
@@ -232,6 +263,16 @@ export default function App() {
           onNext={handleNextMovie}
           onPrev={handlePrevMovie}
           nextMovie={nextMovie}
+        />
+      )}
+
+      {/* Story Page: 3D Globe-to-16:9 Morph & Birdman Feature Presentation */}
+      {activeTab === 'story' && (
+        <StoryPage
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onNavigateToArchive={() => handleSelectTab('archive')}
+          activeTab={activeTab}
         />
       )}
 
